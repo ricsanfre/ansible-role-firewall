@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+{% set postroutingmerged = nft_nat_default_postrouting_rules.copy() %}
+{% set _ = postroutingmerged.update(nft_nat_group_postrouting_rules) %}
+{% set _ = postroutingmerged.update(nft_nat_host_postrouting_rules) %}
+
+chain postrouting {
+{% for group, rules in postroutingmerged|dictsort  %}
+	# {{ group }}
+  {% if not rules %}
+	# (none)
+  {% endif %}
+  {% for rule in rules %}
+	{{ rule }}
+  {% endfor %}
+{% endfor %}
+}

@@ -1,0 +1,23 @@
+---
+galaxy_info:
+  role_name: firewall
+  author: ricsanfre
+  description: Nftables-based firewall installation and configuration role
+
+  license: license (MIT)
+
+  min_ansible_version: 2.11
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - xenial
+        - bionic
+
+  galaxy_tags:
+    - system
+    - firewall
+    - nftables
+
+dependencies: []

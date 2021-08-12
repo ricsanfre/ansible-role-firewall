@@ -1,0 +1,273 @@
+---
+# defaults file for ricsanfre.firewall
+
+
+# Enable or disable traffic forwarding support on a given host.
+# Default: 'false'
+# Set to true when the host need to be converted into a router
+#
+firewall_forward_enabled: false
+
+# Enable or disable NAT support on a given host.
+firewal_nat_enabled: false
+
+
+############################################
+# FIREWALL PACKAGES AND SERVICE MANAGEMENT #
+############################################
+
+# List of firewall packages to be installed.
+firewall_pkg_list:
+  - 'nftables'
+
+# What is the desired state for Firewall packages ? Possible options :
+firewall_pkg_state: 'present'
+
+# List of old Iptables packages to remove to avoid duplicate firewall.
+firewall_old_pkg_list:
+  - 'iptables'
+  - 'libiptc0'
+
+# What is the desired state for old Firewall packages ? Possible options :
+firewall_old_pkg_state: 'absent'
+
+# If the old Iptables packages should be managed
+firewall_old_pkg_manage: true
+
+# The service name to manage.
+firewall_service_name: 'nftables'
+
+#######################################
+# NFTABLES CONFIG FILES AND TEMPLATES #
+#######################################
+
+# Path to the sub directory for Nftables configuration files.
+nft_conf_dir_path: '/etc/nftables.d'
+
+# Path to the main configuration file called by the Systemd Nftables service.
+nft_main_conf_path: '/etc/nftables.conf'
+
+# Template used to provide main configuration file.
+nft_main_conf_content: 'etc/nftables.conf.j2'
+
+# Path to the defined vars file to include in the main configuration file
+nft_define_conf_path: '{{ nft_conf_dir_path }}/defines.nft'
+
+# Template used to provide the previous defined vars file.
+nft_define_conf_content: 'etc/nftables.d/defines.nft.j2'
+
+# Path to the "sets" file to include in the main configuration file
+nft_set_conf_path: '{{ nft_conf_dir_path }}/sets.nft'
+
+# Template used to provide the previous "sets" file.
+nft_set_conf_content: 'etc/nftables.d/sets.nft.j2'
+
+# Path to the input rules file for the filter table to include in the main
+nft_input_conf_path: '{{ nft_conf_dir_path }}/filter-input.nft'
+
+# Template used to provide the previous input rules file.
+nft_input_conf_content: 'etc/nftables.d/filter-input.nft.j2'
+
+# Path to the output rules file for the filter table to include in the main
+# configuration file
+nft_output_conf_path: '{{ nft_conf_dir_path }}/filter-output.nft'
+
+# Template used to provide the previous output rules file.
+nft_output_conf_content: 'etc/nftables.d/filter-output.nft.j2'
+
+# Path to the forward rules file for the filter table to include in the main
+# configuration file
+nft_forward_conf_path: '{{ nft_conf_dir_path }}/filter-forward.nft'
+
+# Template used to provide the previous forward rules file.
+nft_forward_conf_content: 'etc/nftables.d/filter-forward.nft.j2'
+
+# Path to the prerouting rules file for the nat table to include in the main
+# configuration file
+nft_nat_prerouting_conf_path: '{{ nft_conf_dir_path }}/nat-prerouting.nft'
+
+# Template used to provide the previous prerouting rules file.
+nft_nat_prerouting_conf_content: 'etc/nftables.d/nat-prerouting.nft.j2'
+
+# Path to the postrouting rules file for the nat table to include in the main
+# configuration file
+nft_nat_postrouting_conf_path: '{{ nft_conf_dir_path }}/nat-postrouting.nft'
+
+# Template used to provide the previous postrouting rules file.
+nft_nat_postrouting_conf_content: 'etc/nftables.d/nat-postrouting.nft.j2'
+
+# If the nftables config files should be backuped when changed ?
+nft_backup_conf: true
+
+#############################
+# FIREWALL VARS DEFINITIONS #
+#############################
+
+# List of vars definition to configure for all hosts inherited from this role.
+nft_define_default:
+  broadcast and multicast:
+    desc: 'broadcast and multicast'
+    name: badcast_addr
+    value: '{ 255.255.255.255, 224.0.0.1, 224.0.0.251 }'
+  ip6 broadcast and multicast:
+    desc: 'broadcast and multicast'
+    name: ip6_badcast_addr
+    value: '{ ff02::16 }'
+  input tcp accepted:
+    name: in_tcp_accept
+    value: '{ ssh }'
+  output tcp accepted:
+    name: out_tcp_accept
+    value: '{ http, https }'
+  output udp accepted:
+    name: out_udp_accept
+    value: '{ bootps, domain, ntp }'
+
+# List of vars definition to configure for hosts in specific
+# Ansible inventory group.
+nft_define_group: {}
+
+# List of vars definition to configure for specific hosts
+# in the Ansible inventory.
+nft_define_host: {}
+
+#############################
+# FIREWALL SETS DEFINITIONS #
+#############################
+# List of sets to configure for all hosts inherited from this role.
+nft_set_default:
+  blackhole:
+    - type ipv4_addr;
+    - elements = $badcast_addr
+  ip6blackhole:
+    - type ipv6_addr;
+    - elements = $ip6_badcast_addr
+  in_tcp_accept:
+    - type inet_service; flags interval;
+    - elements = $in_tcp_accept
+  out_tcp_accept:
+    - type inet_service; flags interval;
+    - elements = $out_tcp_accept
+  out_udp_accept:
+    - type inet_service; flags interval;
+    - elements = $out_udp_accept
+
+# List of sets to configure for hosts in specific Ansible inventory group.
+nft_set_group: {}
+
+# List of sets to configure for specific hosts in the Ansible inventory.
+nft_set_host: {}
+
+#########################
+# FIREWALL GLOBAL RULES #
+#########################
+
+# List of global rules (applied on all tables) to configure for all hosts
+# inherited from this role.
+nft_global_default_rules:
+  005 state management:
+    - ct state established,related accept
+    - ct state invalid drop
+
+# List of global rules (applied on all tables) to configure for hosts in
+# specific Ansible inventory group.
+nft_global_group_rules: {}
+
+# List of global rules (applied on all tables) to configure for specific hosts
+# in the Ansible inventory.
+nft_global_host_rules: {}
+
+########################
+# FIREWALL INPUT RULES #
+########################
+
+# List of input rules to configure for all hosts inherited from this role.
+nft_input_default_rules:
+  000 policy:
+    - type filter hook input priority 0; policy drop;
+  005 global:
+    - jump global
+  010 drop unwanted:
+    - ip daddr @blackhole counter drop
+  011 drop unwanted ipv6:
+    - ip6 daddr @ip6blackhole counter drop
+  015 localhost:
+    - iif lo accept
+  050 icmp:
+    - meta l4proto {icmp,icmpv6} accept
+  210 input tcp accepted:
+    - tcp dport @in_tcp_accept ct state new accept
+
+# List of input rules to configure for hosts in specific Ansible inventory group.
+nft_input_group_rules: {}
+
+# List of input rules to configure for specific hosts in the Ansible inventory.
+nft_input_host_rules: {}
+
+#########################
+# FIREWALL OUTPUT RULES #
+#########################
+
+# List of output rules to configure for all hosts inherited from this role.
+# by default accept all output traffic
+
+nft_output_default_rules:
+  000 policy:
+    - type filter hook output priority 0;
+
+# List of output rules to configure for hosts in specific Ansible inventory group.
+nft_output_group_rules: {}
+
+# List of output rules to configure for specific hosts in the Ansible inventory.
+nft_output_host_rules: {}
+
+##########################
+# FIREWALL FORWARD RULES #
+##########################
+
+# List of forward rules to configure for all hosts inherited from this role.
+nft_forward_default_rules:
+  000 policy:
+    - type filter hook forward priority 0; policy drop;
+  005 global:
+    - jump global
+
+# List of forward rules to configure for hosts in specific Ansible inventory group.
+nft_forward_group_rules: {}
+
+# List of forward rules to configure for specific hosts in the Ansible inventory.
+nft_forward_host_rules: {}
+
+##################################
+# FIREWALL NAT PRE-ROUTING RULES #
+##################################
+
+# List of prerouting rules to configure for all hosts inherited from this role.
+nft_nat_default_prerouting_rules:
+  000 policy:
+    - type nat hook prerouting priority 0;
+
+# List of prerouting rules to configure for hosts in specific
+# Ansible inventory group.
+nft_nat_group_prerouting_rules: {}
+
+# List of prerouting rules to configure for specific hosts
+# in the Ansible inventory.
+nft_nat_host_prerouting_rules: {}
+
+###################################
+# FIREWALL NAT POST-ROUTING RULES #
+###################################
+
+# List of postrouting rules to configure for all hosts inherited from this role.
+nft_nat_default_postrouting_rules:
+  000 policy:
+    - type nat hook postrouting priority 100;
+
+# List of postrouting rules to configure for hosts in specific
+# Ansible inventory group.
+nft_nat_group_postrouting_rules: {}
+
+# List of postrouting rules to configure for specific hosts
+# in the Ansible inventory.
+nft_nat_host_postrouting_rules: {}

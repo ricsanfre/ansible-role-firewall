@@ -1,0 +1,41 @@
+#!/usr/sbin/nft -f
+# {{ ansible_managed }}
+{% set globalmerged = nft_global_default_rules.copy() %}
+{% set _ = globalmerged.update(nft_global_rules) %}
+{% set _ = globalmerged.update(nft_global_group_rules) %}
+{% set _ = globalmerged.update(nft_global_host_rules) %}
+
+# clean
+flush ruleset
+
+include "{{ nft_define_conf_path }}"
+
+table inet filter {
+	chain global {
+{% for group, rules in globalmerged|dictsort  %}
+		# {{ group }}
+  {% if not rules %}
+		# (none)
+  {% endif %}
+  {% for rule in rules %}
+		{{ rule }}
+  {% endfor %}
+{% endfor %}
+	}
+	include "{{ nft_set_conf_path }}"
+	include "{{ nft_input_conf_path }}"
+	include "{{ nft_output_conf_path }}"
+{% if firewall_forward_enable %}
+	include "{{ nft_forward_conf_path }}"
+{% endif %}
+}
+
+{% if firewall_nat_enable %}
+# Additionnal table for Network Address Translation (NAT)
+table ip nat {
+	include "{{ nft_set_conf_path }}"
+	include "{{ nft_nat_prerouting_conf_path }}"
+	include "{{ nft_nat_postrouting_conf_path }}"
+}
+{% endif %}
+

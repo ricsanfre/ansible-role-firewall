@@ -1,0 +1,131 @@
+---
+# tasks file for ricsanfre.firewall
+
+# Enable traffic forwarding
+- name: Enable IP v4 forwarding
+  sysctl:
+    name: "{{ item }}"
+    value: '1'
+    sysctl_set: true
+    state: present
+    reload: true
+  with_items:
+    - net.ipv4.ip_forward
+    - net.ipv6.conf.all.forwarding
+  when: firewall_forward_enabled
+
+# Manage packages
+- name: Ensure Nftables packages are in their desired state
+  package:
+    name: '{{ firewall_pkg_list | list }}'
+    state: '{{ firewall_pkg_state }}'
+    update_cache: true
+  register: pkg_install_result
+  until: pkg_install_result is success
+
+- name: Ensure old Iptables packages are in their desired state
+  package:
+    name: '{{ firewall_old_pkg_list | list }}'
+    state: '{{ firewall_old_pkg_state }}'
+  register: pkg_remove_result
+  until: pkg_remove_result is success
+  when: firewall_old_pkg_manage
+
+
+- name: Ensure nftables service is enabled and started
+  service:
+    name: "{{ firewall_service_name }}"
+    state: started
+    enabled: true
+
+# Common configuration
+- name: Ensure to create nftables.d directory
+  file:
+    path: "{{ nft_conf_dir_path }}"
+    state: directory
+    mode: 0755
+
+- name: CONFIG generate main conf file
+  template:
+    src: "{{ nft_main_conf_content }}"
+    dest: "{{ nft_main_conf_path }}"
+    owner: root
+    group: root
+    mode: 0755
+    backup: "{{ nft_backup_conf }}"
+  notify: ['Reload nftables service']
+
+
+- name: CONFIG generate vars definition file
+  template:
+    src: "{{ nft_define_conf_content }}"
+    dest: "{{ nft_define_conf_path }}"
+    owner: root
+    group: root
+    mode: 0755
+    backup: "{{ nft_backup_conf }}"
+  notify: ['Reload nftables service']
+
+
+- name: CONFIG generate sets file
+  template:
+    src: "{{ nft_set_conf_content }}"
+    dest: "{{ nft_set_conf_path }}"
+    owner: root
+    group: root
+    mode: 0755
+    backup: "{{ nft_backup_conf }}"
+  notify: ['Reload nftables service']
+
+- name: Filter table - generate input rules file
+  template:
+    src: "{{ nft_input_conf_content }}"
+    dest: "{{ nft_input_conf_path }}"
+    owner: root
+    group: root
+    mode: 0755
+    backup: "{{ nft_backup_conf }}"
+  notify: ['Reload nftables service']
+
+- name: Filter table - generate output rules file
+  template:
+    src: "{{ nft_output_conf_content }}"
+    dest: "{{ nft_output_conf_path }}"
+    owner: root
+    group: root
+    mode: 0755
+    backup: "{{ nft_backup_conf }}"
+  notify: ['Reload nftables service']
+
+- name: Filter table - generate forward rules file
+  template:
+    src: "{{ nft_forward_conf_content }}"
+    dest: "{{ nft_forward_conf_path }}"
+    owner: root
+    group: root
+    mode: 0755
+    backup: "{{ nft_backup_conf }}"
+  notify: ['Reload nftables service']
+  when: (firewall_forward_enable)
+
+- name: Nat table - generate prerouting rules file
+  template:
+    src: "{{ nft_nat_prerouting_conf_content }}"
+    dest: "{{ nft_nat_prerouting_conf_path }}"
+    owner: root
+    group: root
+    mode: 0755
+    backup: "{{ nft_backup_conf }}"
+  notify: ['Reload nftables service']
+  when: (firewall_nat_enable)
+
+- name: Nat table - generate postrouting rules file
+  template:
+    src: "{{ nft_nat_postrouting_conf_content }}"
+    dest: "{{ nft_nat_postrouting_conf_path }}"
+    owner: root
+    group: root
+    mode: 0755
+    backup: "{{ nft_backup_conf }}"
+  notify: ['Reload nftables service']
+  when: (firewall_nat_enable)
