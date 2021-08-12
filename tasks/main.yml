@@ -106,7 +106,7 @@
     mode: 0755
     backup: "{{ nft_backup_conf }}"
   notify: ['Reload nftables service']
-  when: (firewall_forward_enable)
+  when: firewall_forward_enabled
 
 - name: Nat table - generate prerouting rules file
   template:
@@ -117,7 +117,7 @@
     mode: 0755
     backup: "{{ nft_backup_conf }}"
   notify: ['Reload nftables service']
-  when: (firewall_nat_enable)
+  when: firewall_nat_enabled
 
 - name: Nat table - generate postrouting rules file
   template:
@@ -128,4 +128,4 @@
     mode: 0755
     backup: "{{ nft_backup_conf }}"
   notify: ['Reload nftables service']
-  when: (firewall_nat_enable)
+  when: firewall_nat_enabled

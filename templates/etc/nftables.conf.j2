@@ -1,7 +1,6 @@
 #!/usr/sbin/nft -f
 # {{ ansible_managed }}
 {% set globalmerged = nft_global_default_rules.copy() %}
-{% set _ = globalmerged.update(nft_global_rules) %}
 {% set _ = globalmerged.update(nft_global_group_rules) %}
 {% set _ = globalmerged.update(nft_global_host_rules) %}
 
@@ -25,12 +24,12 @@ table inet filter {
 	include "{{ nft_set_conf_path }}"
 	include "{{ nft_input_conf_path }}"
 	include "{{ nft_output_conf_path }}"
-{% if firewall_forward_enable %}
+{% if firewall_forward_enabled %}
 	include "{{ nft_forward_conf_path }}"
 {% endif %}
 }
 
-{% if firewall_nat_enable %}
+{% if firewall_nat_enabled %}
 # Additionnal table for Network Address Translation (NAT)
 table ip nat {
 	include "{{ nft_set_conf_path }}"

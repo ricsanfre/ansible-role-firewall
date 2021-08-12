@@ -9,7 +9,7 @@
 firewall_forward_enabled: false
 
 # Enable or disable NAT support on a given host.
-firewal_nat_enabled: false
+firewall_nat_enabled: false
 
 
 ############################################
@@ -121,7 +121,7 @@ nft_define_default:
     value: '{ http, https }'
   output udp accepted:
     name: out_udp_accept
-    value: '{ bootps, domain, ntp }'
+    value: '{ domain, bootps , ntp }'
 
 # List of vars definition to configure for hosts in specific
 # Ansible inventory group.
