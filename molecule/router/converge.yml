@@ -1,0 +1,9 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+  vars_files:
+    - "router_vars.yml"
+  roles:
+    - role: ricsanfre.firewall

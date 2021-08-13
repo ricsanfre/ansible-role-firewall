@@ -1,0 +1,21 @@
+---
+- name: Dependency
+  hosts: localhost
+  tasks:
+  - name: "Create docker network(s)"
+    docker_network:
+      name: "{{ item.name }}"
+      state: present
+      ipam_config:
+        - subnet: "{{ item.subnet }}"
+          gateway: "{{ item.gateway }}"
+      labels:
+        owner: molecule
+    with_items:
+      - name: lan
+        subnet: 10.0.1.0/24
+        gateway: 10.0.1.1
+      - name: wan
+        subnet: 10.0.2.0/24
+        gateway: 10.0.2.1
+    delegate_to: localhost

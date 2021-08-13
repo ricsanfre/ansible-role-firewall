@@ -1,0 +1,33 @@
+---
+dependency:
+  name: 'shell'
+  command: ansible-playbook ${MOLECULE_PROJECT_DIRECTORY}/molecule/router/dependency.yml
+lint: |
+  set -e
+  yamllint .
+  ansible-lint
+driver:
+  name: docker
+platforms:
+  - name: instance
+    image: "ricsanfre/docker-${MOLECULE_DISTRO:-ubuntu}-ansible:${MOLECULE_RELEASE:-latest}"
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    tmpfs:
+      - /tmp
+      - /run
+      - /run/lock
+    networks:
+      - name: "lan"
+        ipv4_address: 10.0.1.2
+      - name: "wan"
+        ipv4_address: 10.0.2.2
+    privileged: true
+    pre_build_image: true
+provisioner:
+  name: ansible
+  playbooks:
+    converge: ${MOLECULE_PLAYBOOK:-converge.yml}
+verifier:
+  name: ansible
