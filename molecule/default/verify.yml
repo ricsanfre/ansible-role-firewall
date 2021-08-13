@@ -39,6 +39,7 @@
   - name: list rules
     command: nft list ruleset
     register: nft
+    changed_when: false
 
   - name: debug rules
     debug: var=nft
@@ -56,6 +57,7 @@
   - name: service status - active
     command: systemctl is-active nftables.service
     register: status
+    changed_when: false
 
   - name: check service status
     assert:
@@ -65,6 +67,7 @@
   - name: service status - enabled
     command: systemctl is-enabled nftables.service
     register: status
+    changed_when: false
 
   - name: check service status
     assert:

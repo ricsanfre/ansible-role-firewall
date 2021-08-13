@@ -1,7 +1,7 @@
 Ansible Role: Firewall
 =========
 
-[![CI](https://github.com/ricsanfre/ansible-role-ntp/actions/workflows/ci.yml/badge.svg)](https://github.com/ricsanfre/ansible-role-ntp/actions/workflows/ci.yml)
+[![CI](https://github.com/ricsanfre/ansible-role-firewall/actions/workflows/ci.yml/badge.svg)](https://github.com/ricsanfre/ansible-role-firewall/actions/workflows/ci.yml)
 
 
 Install and configure firewall (nftables based) on Linux.
